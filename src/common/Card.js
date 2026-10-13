@@ -1,4 +1,5 @@
-// @ts-check
+
+ // @ts-check
 
 import { encodeHTML } from "./html.js";
 import { flexLayout } from "./render.js";
@@ -14,6 +15,7 @@ class Card {
    * @param {string=} args.customTitle Card custom title.
    * @param {string=} args.defaultTitle Card default title.
    * @param {string=} args.titlePrefixIcon Card title prefix icon.
+   * @param {number=} args.titleFontSize Card title font size.
    * @param {object} [args.colors={}] Card colors arguments.
    * @param {string=} args.colors.titleColor Card title color.
    * @param {string=} args.colors.textColor Card text color.
@@ -29,6 +31,7 @@ class Card {
     customTitle,
     defaultTitle = "",
     titlePrefixIcon,
+    titleFontSize = 18,
   }) {
     this.width = width;
     this.height = height;
@@ -38,12 +41,13 @@ class Card {
 
     this.border_radius = border_radius;
 
-    // returns theme based colors with proper overrides and defaults
     this.colors = colors;
     this.title =
       customTitle === undefined
         ? encodeHTML(defaultTitle)
         : encodeHTML(customTitle);
+
+    this.titleFontSize = titleFontSize;
 
     this.css = "";
 
@@ -134,6 +138,7 @@ class Card {
         ${this.titlePrefixIcon}
       </svg>
     `;
+
     return `
       <g
         data-testid="card-title"
@@ -156,32 +161,32 @@ class Card {
     }
 
     const gradients = this.colors.bgColor.slice(1);
-    return typeof this.colors.bgColor === "object"
-      ? `
-        <defs>
-          <linearGradient
-            id="gradient"
-            gradientTransform="rotate(${this.colors.bgColor[0]})"
-            gradientUnits="userSpaceOnUse"
-          >
-            ${gradients.map((grad, index) => {
-              let offset = (index * 100) / (gradients.length - 1);
+
+    return `
+      <defs>
+        <linearGradient
+          id="gradient"
+          gradientTransform="rotate(${this.colors.bgColor[0]})"
+          gradientUnits="userSpaceOnUse"
+        >
+          ${gradients
+            .map((grad, index) => {
+              const offset = (index * 100) / (gradients.length - 1);
               return `<stop offset="${offset}%" stop-color="#${grad}" />`;
-            })}
-          </linearGradient>
-        </defs>
-        `
-      : "";
+            })
+            .join("")}
+        </linearGradient>
+      </defs>
+    `;
   }
 
   /**
-   * Retrieves css animations for a card.
+   * Retrieves CSS animations for a card.
    *
-   * @returns {string} Animation css.
+   * @returns {string} Animation CSS.
    */
   getAnimations = () => {
     return `
-      /* Animations */
       @keyframes scaleInAnimation {
         from {
           transform: translate(-5px, 5px) scale(0);
@@ -190,6 +195,7 @@ class Card {
           transform: translate(-5px, 5px) scale(1);
         }
       }
+
       @keyframes fadeInAnimation {
         from {
           opacity: 0;
@@ -218,19 +224,24 @@ class Card {
       >
         <title id="titleId">${this.a11yTitle}</title>
         <desc id="descId">${this.a11yDesc}</desc>
+
         <style>
           .header {
-            font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif;
+            font: 600 ${this.titleFontSize}px 'Segoe UI', Ubuntu, Sans-Serif;
             fill: ${this.colors.titleColor};
             animation: fadeInAnimation 0.8s ease-in-out forwards;
           }
+
           @supports(-moz-appearance: auto) {
-            /* Selector detects Firefox */
-            .header { font-size: 15.5px; }
+            .header {
+              font-size: ${this.titleFontSize * (15.5 / 18)}px;
+            }
           }
+
           ${this.css}
 
           ${process.env.NODE_ENV === "test" ? "" : this.getAnimations()}
+
           ${
             this.animations === false
               ? `* { animation-duration: 0s !important; animation-delay: 0s !important; }`
