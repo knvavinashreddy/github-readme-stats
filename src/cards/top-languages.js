@@ -883,7 +883,7 @@ const renderTopLanguages = (topLangs, options = {}) => {
   height,
   border_radius,
   colors,
-  titleFontSize: 16,
+  titleFontSize: 14,
 });
 
   if (disable_animations) {
